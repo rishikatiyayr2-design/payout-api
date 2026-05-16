@@ -11,7 +11,7 @@ def home():
         params = {
             "sort": "-timestamp",
             "count": "true",
-            "limit": 20,
+            "limit": 50,
             "start": 0
         }
 
@@ -19,25 +19,30 @@ def home():
 
         txs = response["data"]
 
-        trx_tx = None
+        final_tx = None
 
         for tx in txs:
 
             # Sirf TRX transfer
             if tx.get("contractType") == 1:
 
-                trx_tx = tx
-                break
+                amount = float(tx["amount"]) / 1000000
 
-        if not trx_tx:
-            return {"error": "No TRX transaction found"}
+                # 5 se 50 TRX only
+                if amount >= 5 and amount <= 50:
 
-        hash_value = trx_tx["hash"]
+                    final_tx = tx
+                    break
 
-        wallet = trx_tx["toAddress"]
+        if not final_tx:
+            return {"error": "No suitable TRX transaction found"}
+
+        hash_value = final_tx["hash"]
+
+        wallet = final_tx["toAddress"]
 
         amount = round(
-            float(trx_tx["amount"]) / 1000000,
+            float(final_tx["amount"]) / 1000000,
             2
         )
 
