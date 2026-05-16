@@ -6,33 +6,38 @@ app = Flask(__name__)
 @app.route("/")
 def home():
 
-    url = "https://apilist.tronscanapi.com/api/transaction?sort=-timestamp&count=true&limit=1&start=0"
+    url = "https://api.trongrid.io/v1/transactions"
 
-    response = requests.get(url)
+    r = requests.get(url)
+    data = r.json()
 
-    data = response.json()
+    txs = data["data"]
 
-    tx = data["data"][0]
+    for tx in txs:
 
-    txhash = tx["hash"]
+        try:
+            contract = tx["raw_data"]["contract"][0]
 
-    owner = tx["ownerAddress"]
+            if contract["type"] == "TransferContract":
 
-    amount = 0
+                value = contract["parameter"]["value"]
 
-    try:
-        amount = tx["contractData"]["amount"] / 1000000
-    except:
-        amount = 5
+                amount = value["amount"] / 1000000
 
-    return {
+                wallet = value["to_address"]
 
-        "hash": txhash,
+                txhash = tx["txID"]
 
-        "wallet": owner,
+                return {
+                    "amount": amount,
+                    "hash": txhash,
+                    "wallet": wallet
+                }
 
-        "amount": str(amount)
+        except:
+            pass
 
-    }
+    return {"error": "No TRX transaction found"}
 
-app.run(host="0.0.0.0", port=10000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
