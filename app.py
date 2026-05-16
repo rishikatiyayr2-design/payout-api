@@ -1,19 +1,38 @@
 from flask import Flask
+import requests
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
 
+    url = "https://apilist.tronscanapi.com/api/transaction?sort=-timestamp&count=true&limit=1&start=0"
+
+    response = requests.get(url)
+
+    data = response.json()
+
+    tx = data["data"][0]
+
+    txhash = tx["hash"]
+
+    owner = tx["ownerAddress"]
+
+    amount = 0
+
+    try:
+        amount = tx["contractData"]["amount"] / 1000000
+    except:
+        amount = 5
+
     return {
 
-        "hash":"0x4b09a2e6eaf65ec118cef5cf86e486007c0e477854c74b9d49c6a8f4e098dae5",
+        "hash": txhash,
 
-        "wallet":"0xA3DBBF1C09d9835fD8117a913E702Cc91177B2A3",
+        "wallet": owner,
 
-        "amount":"20"
+        "amount": str(amount)
 
     }
 
 app.run(host="0.0.0.0", port=10000)
-
