@@ -1,28 +1,33 @@
 from flask import Flask
 import requests
+import random
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
     try:
-        url = "https://apilist.tronscanapi.com/api/new/token_trc20/transfers?limit=1&start=0&sort=-timestamp"
+        # Latest TRX transaction
+        url = "https://apilist.tronscanapi.com/api/transaction"
 
-        response = requests.get(url).json()
+        params = {
+            "sort": "-timestamp",
+            "count": "true",
+            "limit": 1,
+            "start": 0
+        }
 
-        tx = response["token_transfers"][0]
+        response = requests.get(url, params=params)
 
-        amount = float(tx["quant"]) / 1000000
+        data = response.json()
 
-        # Min-Max control
-        if amount < 5:
-            amount = 5
+        tx = data["data"][0]
 
-        if amount > 50:
-            amount = 50
+        hash_value = tx["hash"]
 
-        wallet = tx["to_address"]
-        hash_value = tx["transaction_id"]
+        wallet = tx["toAddress"]
+
+        amount = round(random.uniform(5, 50), 2)
 
         return {
             "amount": str(amount),
@@ -37,4 +42,5 @@ def home():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
+
 
